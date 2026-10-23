@@ -1,0 +1,29 @@
+#!/bin/bash
+# One island of the tuning backend (infra/tuning/cmaes_run.py) per PBS array index, or per ISLAND_INDEX for a plain
+# job. Islands are listed in $ISLANDS (default infra/tuning/islands.example.txt) and share hall-of-fame snapshots in
+# $EVO_ROOT/shared-hof. Resumable: resubmit the same index and the island continues from its checkpoint.
+#   qsub -J 0-3 -v LAB_ENV=$PWD/infra/config/lab.env infra/pbs/islands.pbs
+#   qsub -v LAB_ENV=$PWD/infra/config/lab.env,ISLAND_INDEX=2 infra/pbs/islands.pbs
+# Variables (qsub -v or the env file): BASE (bot folder, default abyss), SPACE (default infra/tuning/space.example.json),
+# EVO_ROOT (default $LAB_SCRATCH/evo), GENS (generations per job, default 200), BUDGET (search seconds per turn, default
+# 0.015), LEAGUE (all | champions), SPARRING (space-separated bot folders), TUNE_PYTHON (default python3; the backend
+# needs the `cma` package, e.g. TUNE_PYTHON='uv run -q --with cma --with pycapnp python3' in the env file).
+#PBS -N bc-island
+#PBS -l select=1:ncpus=8:mem=36gb
+#PBS -l walltime=12:00:00
+#PBS -j oe
+set -eo pipefail
+source "${REPO:-${PBS_O_WORKDIR:-$PWD}}/infra/pbs/env.sh"
+EVO=${EVO_ROOT:-$SCRATCH/evo}
+ISLANDS=${ISLANDS:-infra/tuning/islands.example.txt}
+IDX=${ISLAND_INDEX:-${PBS_ARRAY_INDEX:-0}}
+LINE=$(grep -v '^#' "$ISLANDS" | grep -v '^[[:space:]]*$' | sed -n "$((IDX + 1))p")
+[ -n "$LINE" ] || { echo "no island at index $IDX in $ISLANDS"; exit 1; }
+NAME=${LINE%% *}
+ARGS=""; [ "$LINE" != "$NAME" ] && ARGS=${LINE#* }
+mkdir -p "$EVO/islands/$NAME" "$EVO/shared-hof"
+echo "island $NAME on $(hostname): $ARGS"
+${TUNE_PYTHON:-python3} infra/tuning/cmaes_run.py --base "${BASE:-abyss}" --space "${SPACE:-infra/tuning/space.example.json}" \
+  --out "$EVO/islands/$NAME" --island "$NAME" --shared-hof "$EVO/shared-hof" --jobs "$NCPUS" \
+  --gens "${GENS:-200}" --budget "${BUDGET:-0.015}" --scratch "${TMPDIR:-/tmp}" --league "${LEAGUE:-all}" \
+  ${SPARRING:+--sparring $SPARRING} $ARGS

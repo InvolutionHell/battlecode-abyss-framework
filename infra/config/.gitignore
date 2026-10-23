@@ -1,0 +1,8 @@
+# local copies of the example files (site-specific): only the *.example.* files and example.env are tracked
+*.env
+!example.env
+*.toml
+!*.example.toml
+*.txt
+!*.example.txt
+*.local.*

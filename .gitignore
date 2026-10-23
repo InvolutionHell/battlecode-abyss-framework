@@ -1,0 +1,57 @@
+# unswbc: replays, native build folders, WASM builds
+replays/
+*.replay
+*.replay.zst
+.unswbc-build/
+*.wasm
+# the two short test games that the tools' tests read
+!tools/tests/fixtures/*.replay
+
+# files the quick start creates inside bots/ (they ship with the toolkit: `unswbc maps maps`, `unswbc init cpp starter`),
+# and generated map sets in bots/maps/<set>/ (abyss-mapgen, pearl variants); only unseen50/ is part of the repository
+bots/starter/
+bots/maps/*
+!bots/maps/unseen50/
+
+# outputs of the tools, the lab and the learning pipeline (/data/ and /lab/ are anchored: rl/data/ and infra/lab/
+# are source code)
+/data/
+arena-out/
+runs/
+sweeps/
+rl_runs/
+/lab/
+/out/
+
+# job and run logs: they carry host names, job ids and scratch paths
+bc-*.o[0-9]*
+bc-*.e[0-9]*
+*.log
+nohup.out
+
+# Python and tool caches
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+*.egg-info/
+build/
+
+# secrets: the toolkit's upload key and local environment files
+.env
+.env.*
+*.env
+!infra/config/example.env
+keys/
+keys.json
+.unswbc/
+
+# editors and OS
+.vscode/
+.idea/
+.DS_Store
+._*

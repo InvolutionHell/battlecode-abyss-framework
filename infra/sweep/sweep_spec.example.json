@@ -1,0 +1,28 @@
+{
+  "name": "example",
+  "carrier": "abyss",
+  "prefix": "sw",
+  "baseline": "swbase_c",
+  "mirror": "abyss",
+  "judges_file": "infra/config/judges.example.txt",
+  "reported": [],
+  "per_round": 10,
+  "stage1": {
+    "mirror": {"maps": ["default", "arena", "maze", "portals", "islands", "trophy", "devil", "unsw", "weakhold", "schooltime"],
+               "repeat": 4, "seed": 101},
+    "judges": {"maps": ["default", "maze", "portals", "islands", "unsw"], "repeat": 1, "seed": 102}
+  },
+  "confirm": {
+    "mirror": {"set": "official", "repeat": 4, "seed": 201},
+    "judges": {"set": "official", "repeat": 1, "seed": 202}
+  },
+  "rule": {"judge_min": 0, "mirror_floor": -8},
+  "prio": {"stage1": 3, "confirm": 2, "baseline": 2},
+  "arms": [
+    ["BC_MN_DANGER_W", [0.4, 0.8]],
+    ["BC_MN_EXPLORE_TH", [0.2, 0.4]],
+    ["BC_QUEEN_BOXGUARD", [0]],
+    ["BC_HARVEST", [0]],
+    {"defs": {"BC_MN_DANGER_W": 0.8, "BC_MN_EXPLORE_TH": 0.4}}
+  ]
+}

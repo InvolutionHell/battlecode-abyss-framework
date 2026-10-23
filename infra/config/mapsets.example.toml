@@ -1,0 +1,26 @@
+# Map sets for `lab.py submit --set NAME` and the sweep spec ("set": NAME). Copy to infra/config/mapsets.toml to change
+# them (lab.py falls back to this file when that copy does not exist).
+#
+# maps    map names relative to bots/maps, without ".map"
+# pv      how many maps of bots/maps/<pv_dir> the second arena process plays (both sides); 0 = none
+# pv_dir  folder of generated variant maps (for example the official maps with re-drawn pearl beds), default "pv"
+#
+# Games per pair = 2 x len(maps) x repeat + 2 x pv.
+
+default_set = "official"
+
+[sets.official]
+maps = ["Colosseum", "arena", "australia", "autarky", "big_empty", "default", "default_small", "devil", "dilemma",
+        "islands", "maze", "portals", "queen_of_spades", "schooltime", "slithery_fight", "stripes", "stronghold",
+        "tower_defense", "trauma", "trophy", "unsw", "weakhold"]
+pv = 0
+pv_dir = "pv"
+
+[sets.quick]
+maps = ["default", "arena", "maze", "portals", "islands"]
+pv = 0
+
+[sets.official_pv]
+maps = ["default", "arena", "australia", "devil", "maze", "portals", "schooltime", "trophy", "unsw", "weakhold"]
+pv = 20
+pv_dir = "pv"

@@ -1,0 +1,61 @@
+# Native C++ tests of the released bot (bots/abyss), one build per line:
+#   <test file> [compile flags ...]
+# run.sh compiles each line as
+#   $CXX -std=c++20 -O2 $CXXFLAGS <flags> -I bots/abyss tests/native/<test file>
+# and runs the binary; a line passes when it exits with 0 and ran at least one check.
+#
+# A line without flags tests the module as configured in the final build. A -D flag turns on a module that is compiled
+# out of the final build (its default is 0 and wrapped in #ifndef), picks one of that module's modes or parameters, or
+# selects a test-only trace. Switches that ablation.hpp sets unconditionally (BC_QUEEN_BREATHE, BC_LONGEST_RESERVE,
+# BC_HARVEST, BC_QUEEN_BOXGUARD, BC_MAPNET_EVIDENCE, BC_MAPNET_VALUE, BC_QUEEN_GROWFIRST, BC_QUEEN_KEEPAWAY,
+# BC_UNIT_SLOT, BC_FORAGE_PATH, BC_OPEN_EXPAND, BC_OPEN_EXPAND_GATE, ...) cannot be changed from the command line, so
+# their tests run at the final build's values.
+
+# ---- modules of the final build, at their final settings ------------------------------------------------------------
+comms_test.cpp
+fallback95_test.cpp -DBC_FALLBACK95=1 -DBC_V11_TRACE=1
+portal_gate_test.cpp
+mapnet_test.cpp
+mapnet_evidence_test.cpp
+mapnet_value_test.cpp
+queen_breathe_test.cpp
+queen_boxguard_test.cpp
+queen_boxguard_test.cpp -DBC_ECON_TRACE=1
+queen_growfirst_test.cpp
+queen_keepaway_test.cpp
+longest_reserve_test.cpp
+reserve_feed_test.cpp
+harvest_test.cpp
+unit_slot_test.cpp
+open_expand_test.cpp
+bedraid_test.cpp
+fast_bed_field_test.cpp
+
+# ---- inactive modules (compiled out of the final build), switched on for the test ------------------------------------
+region_test.cpp -DBC_MAPNET_ROOMS=1
+harvest_test.cpp -DBC_EXPAND_OPENING=1
+bedraid_test.cpp -DBC_BEDRAID=1
+expand_test.cpp -DBC_EXPAND=1
+expand_opening_test.cpp -DBC_EXPAND_OPENING=1
+queen_growup_test.cpp -DBC_QUEEN_GROWUP=1
+queen_growup_test.cpp -DBC_QUEEN_GROWUP=2
+queen_growup_test.cpp -DBC_QUEEN_GROWUP=1 -DBC_GROWUP_FEED=1
+queen_yield_test.cpp -DBC_QUEEN_YIELD=1
+qsk_pathheat_test.cpp -DBC_QSK_PATHHEAT=1
+queen_feed350_test.cpp -DBC_QUEEN_FEED350=1
+queen_feed350_test.cpp -DBC_QUEEN_FEED350=2
+queen_feed350_test.cpp -DBC_QUEEN_FEED350=3
+queen_feed350_test.cpp -DBC_QUEEN_FEED350=4
+trap_pocket_test.cpp -DBC_TRAPPOCKET=1
+sprint_target_test.cpp -DBC_SPRINT_TARGET=1
+open_risk_test.cpp -DBC_OPEN_RISK=15
+open_risk_test.cpp -DBC_OPEN_RISK=1
+open_risk_test.cpp -DBC_OPEN_RISK=2
+open_risk_test.cpp -DBC_OPEN_RISK=4
+open_risk_test.cpp -DBC_OPEN_RISK=8
+bed_keep_test.cpp -DBC_BED_KEEP=1
+bed_keep_test.cpp -DBC_BED_KEEP=3
+bed_keep_test.cpp -DBC_BED_KEEP=3 -DBC_KEEP_GAP=3 -DBC_TIER2=1
+fast_bed_field_test.cpp -DBC_T64_FIELD=1
+fast_bed_field_test.cpp -DBC_T64_FIELD=1 -DBC_T64_FASTEST=0
+fast_bed_field_test.cpp -DBC_T64_FIELD=1 -DBC_T64_R=6

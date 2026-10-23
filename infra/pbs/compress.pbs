@@ -1,0 +1,15 @@
+#!/bin/bash
+# Losslessly compress finished replays under $LAB_SCRATCH (*.replay -> *.replay.zst; zstd removes a source only after
+# its archive is written). Files untouched for AGE minutes only (default 180), so running jobs are left alone. A full
+# scratch quota crashes long tuning jobs at their checkpoint; run this when space gets short.
+#   qsub -v LAB_ENV=$PWD/infra/config/lab.env infra/pbs/compress.pbs
+# The replay readers in tools/ accept .zst; otherwise `zstd -dc file.replay.zst > file.replay`.
+#PBS -N bc-zstd
+#PBS -l select=1:ncpus=8:mem=8gb
+#PBS -l walltime=04:00:00
+#PBS -j oe
+set -uo pipefail
+source "${REPO:-${PBS_O_WORKDIR:-$PWD}}/infra/pbs/env.sh"
+df -h "$SCRATCH" | tail -1
+find "$SCRATCH" -path '*/replays/*.replay' -mmin +"${AGE:-180}" -print0 | xargs -0 -r -n 40 -P "$NCPUS" zstd -q -6 --rm
+df -h "$SCRATCH" | tail -1

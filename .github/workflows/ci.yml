@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    name: Bot build and native tests (g++)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CXX: g++
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Compiler version
+        run: $CXX --version
+
+      - name: Build bots/abyss natively
+        run: $CXX -std=c++20 -O2 -o "$RUNNER_TEMP/abyss_native" bots/abyss/main.cpp
+
+      - name: Native unit tests
+        # run.sh adds -include bits/stdc++.h itself when the compiler uses libstdc++ (see tests/README.md)
+        run: bash tests/native/run.sh
+
+  wasm:
+    name: Released bot's WASM hash (unswbc 1.2.9 --sandbox)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPECTED: 0f39d15f10a503b5d5602144660b8c3d3e62cae53ed1fa94e792c88e395e3b0e  # pragma: allowlist secret
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install the toolkit
+        run: python -m pip install unswbc==1.2.9 wasmtime==49.0.0  # wasmtime: the version the release hash was verified with
+
+      - name: Build bots/abyss in the sandbox and compare the hash
+        # the first sandbox build also compiles the toolkit's clang for the runner (up to a minute)
+        working-directory: bots
+        run: |
+          unswbc maps maps
+          unswbc init cpp starter
+          cache="${XDG_CACHE_HOME:-$HOME/.cache}/unswbc/wasmbots"
+          if [ -d "$cache" ]; then find "$cache" -name 'abyss-*.wasm' -delete; fi
+          unswbc run maps/arena.map abyss starter --sandbox --no-replay --seed 1
+          got=$(sha256sum "$cache"/abyss-*.wasm | cut -d' ' -f1)
+          echo "abyss wasm sha256: $got"
+          test "$got" = "$EXPECTED"
+
+  python:
+    name: Tools and infra tests (Python)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install test dependencies
+        run: python -m pip install pytest pycapnp numpy scipy zstandard
+
+      - name: Tools tests
+        working-directory: tools
+        run: python -m pytest -q
+
+      - name: Infra tests
+        run: python -m pytest -q infra/tests

@@ -1,0 +1,17 @@
+{
+  "comment": "Search space for infra/tuning/cmaes_run.py on bots/abyss: a few knobs of its Params struct (common.hpp). Fields of the bot's tuned_params.hpp that are not listed here keep their values. per: all = one value everywhere, group = one per map group, context = one per (map group, phase).",
+  "contexts": "group_phase",
+  "groups": 3,
+  "phases": 4,
+  "namespace": "bc",
+  "struct": "Params",
+  "params_file": "common.hpp",
+  "knobs": {
+    "gamma":       {"lo": 0.70, "hi": 0.92, "per": "context"},
+    "eatBonus":    {"lo": 0.0,  "hi": 3.0,  "per": "context"},
+    "wDanger":     {"lo": 0.3,  "hi": 4.0,  "per": "context"},
+    "wHunt":       {"lo": 0.0,  "hi": 4.0,  "per": "context"},
+    "squadSize":   {"lo": 1,    "hi": 5,    "int": true, "per": "context"},
+    "wExploreFar": {"lo": 0.0,  "hi": 3.0,  "per": "context"}
+  }
+}

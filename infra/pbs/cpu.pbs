@@ -1,0 +1,23 @@
+#!/bin/bash
+# CPU census on a compute node: BOT vs OPP in the judge's sandbox on the largest maps, both sides x REPEAT, no replays;
+# then infra/lab/cpu_check.py: the job fails when any turn was lost to the CPU limit or reached LIMIT (M points).
+#   qsub -v BOT=abyss infra/pbs/cpu.pbs
+#   qsub -v BOT=abyss,OPP=abyss_ref,MAPS=unsw:australia,REPEAT=2,LIMIT=95 infra/pbs/cpu.pbs
+# The worst turns come with the most units on the largest maps, so the default maps are the four largest plus two with
+# many portals or rooms; play against a strong opponent (an army to search around), not only the starter.
+# For one game's turn-by-turn profile use `unswbc run maps/X.map BOT OPP --sandbox -v` instead.
+#PBS -N bc-cpu
+#PBS -l select=1:ncpus=12:mem=56gb
+#PBS -l walltime=03:00:00
+#PBS -j oe
+set -uo pipefail
+source "${REPO:-${PBS_O_WORKDIR:-$PWD}}/infra/pbs/env.sh"
+job_cache
+MAPS=${MAPS:-big_empty:unsw:australia:schooltime:islands:portals}
+OUT=${OUTDIR:-$SCRATCH/cpu/${BOT}_vs_${OPP:-starter}_$(date +%Y%m%d-%H%M%S)}
+mkdir -p "$OUT"
+echo "node $(hostname)  $(${UNSWBC:-unswbc} --version 2> /dev/null | head -1)  bot $BOT  out $OUT"
+$PY infra/lab/arena.py "$BOT" "${OPP:-starter}" -j "$NCPUS" -o "$OUT" --sandbox --no-replays --maps ${MAPS//:/ } \
+    --repeat "${REPEAT:-1}" ${SEEDBASE:+--seed-base $SEEDBASE} > "$OUT/arena.log" 2>&1
+tail -3 "$OUT/arena.log"
+$PY infra/lab/cpu_check.py "$OUT" --limit "${LIMIT:-95}"

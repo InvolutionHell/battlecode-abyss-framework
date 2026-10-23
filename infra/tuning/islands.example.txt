@@ -1,0 +1,8 @@
+# Islands of the tuning backend: one line per island, "<name> <extra cmaes_run.py arguments>". Line k (counting from 0,
+# comments and blank lines skipped) is PBS array index k / ISLAND_INDEX=k of infra/pbs/islands.pbs. Islands that differ
+# only in --seed explore the same space independently; islands on other spaces or map subsets are specialists. All of
+# them share hall-of-fame snapshots through <EVO_ROOT>/shared-hof, so each league holds the others' CMA means.
+isl0 --seed 1 --paired
+isl1 --seed 2 --paired
+isl2 --seed 3 --paired --sigma 0.25
+isl3 --seed 4 --paired --tune-groups 2

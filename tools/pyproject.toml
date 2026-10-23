@@ -1,0 +1,68 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "abyss-tools"
+version = "1.0.0"
+description = "Replay parsing, KPI reports, local match runners and map generators for UNSW Battlecode 2026 \"Abyss\""
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+dependencies = [
+    "pycapnp>=2.0",
+    "numpy>=1.22",
+]
+
+[project.optional-dependencies]
+# terrain distances (lead_curve, the dist matrix cache) and .replay.zst files
+full = ["scipy>=1.8", "zstandard>=0.19"]
+test = ["pytest>=7", "scipy>=1.8", "zstandard>=0.19"]
+
+[project.scripts]
+abyss-replay-stats = "abyss_tools.replay.stats:main"
+abyss-replay-state = "abyss_tools.replay.state:main"
+abyss-replay-diff = "abyss_tools.replay.diff:main"
+abyss-rules = "abyss_tools.replay.rules:main"
+abyss-opening-kpi = "abyss_tools.kpi.opening:main"
+abyss-census-open = "abyss_tools.kpi.census_open:main"
+abyss-macro-measure = "abyss_tools.kpi.macro_measure:main"
+abyss-lead-curve = "abyss_tools.kpi.lead_curve:main"
+abyss-spawn-share = "abyss_tools.kpi.spawn_share:main"
+abyss-harvest-yield = "abyss_tools.kpi.harvest_yield:main"
+abyss-queen-box = "abyss_tools.kpi.queen_box:main"
+abyss-queen-feed = "abyss_tools.kpi.queen_feed:main"
+abyss-queen-kill = "abyss_tools.kpi.queen_kill:main"
+abyss-queen-early-deaths = "abyss_tools.kpi.queen_early_deaths:main"
+abyss-value-trace = "abyss_tools.kpi.value_trace:main"
+abyss-region-graph = "abyss_tools.kpi.region_graph:main"
+abyss-arena = "abyss_tools.run.arena:main"
+abyss-cpu-census = "abyss_tools.run.cpu_census:main"
+abyss-safety-line = "abyss_tools.run.safety_line:main"
+abyss-sweep = "abyss_tools.run.sweep:main"
+abyss-decision-harness = "abyss_tools.run.decision_harness:main"
+abyss-mapgen = "abyss_tools.maps.mapgen:main"
+abyss-mapgen-cls = "abyss_tools.maps.mapgen_cls:main"
+abyss-pearl-variants = "abyss_tools.maps.pearl_variants:main"
+
+[tool.setuptools.packages.find]
+include = ["abyss_tools*"]
+
+[tool.setuptools.package-data]
+abyss_tools = [
+    "schema/*.capnp",
+    "schema/capnp/*.capnp",
+    "kpi/*.cpp",
+    "run/*.hpp",
+    "run/census_bots/*/*.cpp",
+    "run/census_bots/*/*.toml",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.uv]
+# `uv run --with ... python -m pytest` from this folder uses an ephemeral environment and does not create a .venv or a
+# lock file here; install the package with `pip install -e .` (or `uv pip install -e .`) for the console scripts.
+managed = false

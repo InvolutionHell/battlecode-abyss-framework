@@ -1,0 +1,35 @@
+#!/bin/bash
+# One arena run on a compute node: A vs B on MAPS (or the first MAPN maps of maps/MAPDIR) x both sides x REPEAT, with
+# paired seeds (infra/lab/arena.py), then the optional post-processing hook and replay compression.
+#   qsub -v A=abyss,B=starter infra/pbs/arena.pbs
+#   qsub -v A=abyss,B=starter,EXTRA=--sandbox,MAPS=default:arena:maze,REPEAT=2 infra/pbs/arena.pbs
+#   qsub -v A=abyss,B=starter,EXTRA=--sandbox,MAPDIR=pv,MAPN=20 infra/pbs/arena.pbs      # generated variant maps
+# Variables: A, B (bot folders), MAPS (colon-separated; default every map in maps/), MAPDIR + MAPN + MAPSKIP, REPEAT,
+# SEEDBASE (another base = games distinct from other runs), FORK=1 (both sides share a seed), EXTRA (more arena.py
+# flags, e.g. --sandbox), OUTDIR (default $LAB_SCRATCH/arena/A_vs_B_<time>), INLINE_POST=0 (skip $LAB_POSTPROCESS),
+# KEEP_REPLAYS=1 (leave the replays uncompressed), LAB_ENV, REPO.
+# Memory, not cores, limits the games per node: a sandbox game of a large bot averages about 2.4 GB and peaks near
+# 4.4 GB, so ask for about 4.5 GB per CPU.
+#PBS -N bc-arena
+#PBS -l select=1:ncpus=12:mem=56gb
+#PBS -l walltime=04:00:00
+#PBS -j oe
+set -uo pipefail
+source "${REPO:-${PBS_O_WORKDIR:-$PWD}}/infra/pbs/env.sh"
+job_cache
+OUT=${OUTDIR:-$SCRATCH/arena/${A}_vs_${B}_${MAPDIR:-maps}_$(date +%Y%m%d-%H%M%S)}
+mkdir -p "$OUT"
+echo "node $(hostname)  $(${UNSWBC:-unswbc} --version 2> /dev/null | head -1)  out $OUT"
+ARGS=(-j "$NCPUS" -o "$OUT" --repeat "${REPEAT:-1}")
+[ -n "${MAPS:-}" ] && ARGS+=(--maps ${MAPS//:/ })
+[ -n "${MAPDIR:-}" ] && ARGS+=(--map-dir "$MAPDIR" --map-count "${MAPN:-20}" --map-skip "${MAPSKIP:-0}")
+[ -n "${SEEDBASE:-}" ] && ARGS+=(--seed-base "$SEEDBASE")
+[ "${FORK:-0}" = 1 ] && ARGS+=(--fork)
+$PY infra/lab/arena.py "$A" "$B" "${ARGS[@]}" ${EXTRA:-}
+RC=$?
+# INLINE_POST=0 / KEEP_REPLAYS=1: census.sh runs the hook as a separate job after both halves of a pair
+if [ -n "${LAB_POSTPROCESS:-}" ] && [ "${INLINE_POST:-1}" = 1 ]; then
+  bash -c "$LAB_POSTPROCESS" _ "$A" "$OUT" "$OUT" > "$OUT/postprocess.log" 2>&1 || echo "postprocess failed (see $OUT/postprocess.log)"
+fi
+[ "${KEEP_REPLAYS:-0}" = 1 ] || compress_replays "$OUT"
+exit $RC

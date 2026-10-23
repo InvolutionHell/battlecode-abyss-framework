@@ -1,0 +1,21 @@
+# Node pool of infra/lab/lab.py. Copy to infra/config/nodes.toml (git-ignored) or point LAB_NODES at your copy.
+#
+# [nodes]: one line per worker, "<ssh alias> = <slots>". The alias is resolved by your ~/.ssh/config (HostName, User,
+# IdentityFile, ProxyJump, ...), so no host or user name lives in this repository. Slots = games the node may run at
+# once. Memory, not cores, is usually the limit: one sandbox game of a large bot grows to about 2.4 GB on average and
+# about 4.4 GB at its peak, and a node that runs more games than its memory allows meets the OOM killer, which loses
+# games silently. A safe rule: slots = min(cores - 2, memory_GB / 4.4).
+#
+# Every node needs: the same unswbc version as the judge (on PATH, or set LAB_REMOTE_ENV in the env file), python3,
+# rsync, and optionally zstd (replays are compressed after each pair). `lab.py push` copies the code.
+
+[nodes]
+"worker-a" = 30     # e.g. 32 cores / 256 GB
+"worker-b" = 60     # e.g. 64 cores / 512 GB
+# "worker-c" = 20
+
+[scheduler]
+min_slots = 20      # a small pair is not started on fewer free slots than min(min_slots, its games)
+big_games = 44      # pairs with more games than this are "big"
+big_min = 20        # a big pair waits for at least this many free slots (and reserves a node while it waits)
+push_workers = 8    # parallel rsync pushes

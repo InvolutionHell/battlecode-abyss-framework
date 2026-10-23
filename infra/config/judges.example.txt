@@ -1,0 +1,7 @@
+# Judged opponents of an autosweep (sweep spec "judges_file"): one bot folder under bots/ per line; "#" starts a comment.
+# The file is re-read before every round, so a judge can be added while the sweep runs (its baseline pairs are
+# submitted automatically). Replace the placeholders with the reference bots you want every accepted change to hold
+# against: earlier versions of your own bot, sparring bots with a particular play style that you wrote, the starter.
+starter
+# my_previous_release
+# my_aggressive_sparring_bot

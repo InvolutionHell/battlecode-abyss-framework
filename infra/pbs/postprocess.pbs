@@ -1,0 +1,27 @@
+#!/bin/bash
+# The post-processing hook of a census pair as its own job (e.g. replay KPIs after two arena jobs; census.sh submits it
+# with -W depend=afterany:...). The command is $LAB_POSTPROCESS from the env file (LAB_ENV), run as
+#   bash -c "$LAB_POSTPROCESS" _ CAND PAIR_DIR RUN_DIR...
+# exactly like the lab's pair.sh, so one hook serves both platforms (write PAIR_DIR.json for KPI tables).
+#   qsub -v LAB_ENV=$PWD/infra/config/lab.env,CAND=abyss,PAIR=$LAB_SCRATCH/census/t1/abyss_vs_starter,RUNS=orig:pv \
+#        infra/pbs/postprocess.pbs
+# RUNS: colon-separated run folders, relative to PAIR (default orig:pv; missing ones are skipped).
+#PBS -N bc-post
+#PBS -l select=1:ncpus=8:mem=16gb
+#PBS -l walltime=01:00:00
+#PBS -j oe
+set -uo pipefail
+source "${REPO:-${PBS_O_WORKDIR:-$PWD}}/infra/pbs/env.sh"
+[ -n "${LAB_POSTPROCESS:-}" ] || { echo "LAB_POSTPROCESS is not set (put it in the env file named by LAB_ENV)"; exit 1; }
+DIRS=()
+IFS=: read -r -a PARTS <<< "${RUNS:-orig:pv}"
+for r in "${PARTS[@]}"; do
+  case $r in /*) d=$r ;; *) d=$PAIR/$r ;; esac
+  [ -d "$d" ] && DIRS+=("$d")
+done
+[ ${#DIRS[@]} -gt 0 ] || { echo "no run folders under $PAIR"; exit 1; }
+bash -c "$LAB_POSTPROCESS" _ "$CAND" "$PAIR" "${DIRS[@]}" > "$PAIR/postprocess.log" 2>&1
+RC=$?
+tail -20 "$PAIR/postprocess.log"
+compress_replays "${DIRS[@]}"
+exit $RC
